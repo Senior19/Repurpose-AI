@@ -47,6 +47,24 @@ The app auto-detects which provider to use based on which key is set:
 Then open **http://localhost:8000** — the FastAPI app serves the frontend
 directly, no separate dev server needed.
 
+## Streamlit Community Cloud
+
+The repository is configured to run its FastAPI application through Streamlit's
+ASGI app discovery. In Streamlit Community Cloud, select branch `main` and set
+the main file path to `repurposeai/backend/main.py`. The dependency file is
+alongside that entrypoint, and the Streamlit config belongs at the repository
+root (`.streamlit/config.toml`).
+
+The public-data explorers do not require a key. To enable AI agent synthesis,
+add a provider key in **App settings → Secrets** (never commit it):
+
+```toml
+GROQ_API_KEY = "your-groq-key"
+```
+
+`ANTHROPIC_API_KEY` is also supported. If both keys are configured, Groq is used
+by default; set `REPURPOSEAI_PROVIDER = "anthropic"` to choose Anthropic.
+
 ## What to demo
 
 1. Enter a disease (e.g. "Alzheimer's Disease") → **Start Investigation**.

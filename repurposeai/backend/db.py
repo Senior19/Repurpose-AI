@@ -6,19 +6,22 @@ agent_logs + research_runs into SQLite so a demo run survives a server
 restart and can be inspected with `sqlite3 repurposeai.db`.
 """
 import json
+import os
 import sqlite3
 import threading
+from pathlib import Path
 from typing import Dict, Optional
 
 from schemas import ResearchRun
 
-DB_PATH = "repurposeai.db"
+DB_PATH = Path(os.environ.get("REPURPOSEAI_DB_PATH", Path(__file__).resolve().with_name("repurposeai.db")))
 _lock = threading.Lock()
 _runs: Dict[str, ResearchRun] = {}
 
 
 def _conn():
-    conn = sqlite3.connect(DB_PATH)
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(DB_PATH), timeout=30)
     conn.execute(
         """CREATE TABLE IF NOT EXISTS research_runs (
             id TEXT PRIMARY KEY,

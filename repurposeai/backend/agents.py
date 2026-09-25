@@ -18,6 +18,21 @@ import requests
 import tools
 from schemas import Candidate, EvidenceItem, AgentLog, new_id
 
+def _setting(name: str, fallback: str = "") -> str:
+    """Read deployment secrets from env vars or Streamlit Cloud secrets."""
+    value = os.environ.get(name)
+    if value:
+        return value
+    try:
+        import streamlit as st
+        value = st.secrets.get(name, "")
+    except Exception:
+        # Streamlit is optional for local FastAPI development, and secrets.toml
+        # is optional when using the evidence-only explorers.
+        value = ""
+    return str(value or fallback)
+
+
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
@@ -25,22 +40,20 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 # required - see README), otherwise fall back to Anthropic. Override with
 # REPURPOSEAI_PROVIDER=groq|anthropic if you have both keys set.
 PROVIDER = os.environ.get("REPURPOSEAI_PROVIDER", "").lower()
-if not PROVIDER:
-    PROVIDER = "groq"
 
 DEFAULT_MODELS = {"groq": "llama-3.3-70b-versatile", "anthropic": "claude-sonnet-5"}
-MODEL = os.environ.get("REPURPOSEAI_MODEL", DEFAULT_MODELS.get(PROVIDER, "claude-sonnet-5"))
+MODEL = os.environ.get("REPURPOSEAI_MODEL", "")
 
 
 _resolved_groq_model = None  # cached after first successful auto-discovery
 
-def _discover_groq_model() -> str:
+def _discover_groq_model(api_key: str) -> str:
     """Ask Groq itself which chat models are currently available on this
     account and pick a sensible one. This avoids hardcoding a model name
     that Groq may have renamed/retired since this code was written."""
     resp = requests.get(
         "https://api.groq.com/openai/v1/models",
-        headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+        headers={"Authorization": f"Bearer {api_key}"},
         timeout=30,
     )
     resp.raise_for_status()
@@ -66,17 +79,25 @@ def call_llm(system: str, user: str, max_tokens: int = 1200) -> str:
     """Thin wrapper that calls either Groq (OpenAI-compatible, free) or
     Anthropic, depending on which key is configured. Returns plain text."""
 
-    if PROVIDER == "groq":
-        global _resolved_groq_model
-        if not GROQ_API_KEY:
-            raise RuntimeError("GROQ_API_KEY is not set. Get a free key at console.groq.com and export it.")
+    groq_api_key = _setting("GROQ_API_KEY", GROQ_API_KEY)
+    anthropic_api_key = _setting("ANTHROPIC_API_KEY", ANTHROPIC_API_KEY)
+    configured_provider = _setting("REPURPOSEAI_PROVIDER", PROVIDER).lower()
+    provider = configured_provider if configured_provider in {"groq", "anthropic"} else ""
+    if not provider:
+        provider = "groq" if groq_api_key else "anthropic" if anthropic_api_key else "groq"
+    model = _setting("REPURPOSEAI_MODEL", MODEL) or DEFAULT_MODELS[provider]
 
-        model_to_use = _resolved_groq_model or MODEL
+    if provider == "groq":
+        global _resolved_groq_model
+        if not groq_api_key:
+            raise RuntimeError("GROQ_API_KEY is missing. Add it to Streamlit Cloud app Secrets or set it as an environment variable.")
+
+        model_to_use = _resolved_groq_model or model
 
         def _post(model_name):
             return requests.post(
                 "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
+                headers={"Authorization": f"Bearer {groq_api_key}", "Content-Type": "application/json"},
                 json={
                     "model": model_name,
                     "max_tokens": max_tokens,
@@ -93,7 +114,7 @@ def call_llm(system: str, user: str, max_tokens: int = 1200) -> str:
         # If the configured model no longer exists, auto-discover a working
         # one from Groq's own /models endpoint and retry once.
         if resp.status_code == 404 and "model_not_found" in resp.text:
-            _resolved_groq_model = _discover_groq_model()
+            _resolved_groq_model = _discover_groq_model(groq_api_key)
             resp = _post(_resolved_groq_model)
 
         if not resp.ok:
@@ -102,19 +123,19 @@ def call_llm(system: str, user: str, max_tokens: int = 1200) -> str:
         return data["choices"][0]["message"]["content"]
 
     # --- Anthropic path ---
-    if not ANTHROPIC_API_KEY:
+    if not anthropic_api_key:
         raise RuntimeError(
-            "ANTHROPIC_API_KEY is not set. Export it before starting the server."
+            "ANTHROPIC_API_KEY is missing. Add it to Streamlit Cloud app Secrets or set it as an environment variable."
         )
     resp = requests.post(
         "https://api.anthropic.com/v1/messages",
         headers={
-            "x-api-key": ANTHROPIC_API_KEY,
+            "x-api-key": anthropic_api_key,
             "anthropic-version": "2023-06-01",
             "content-type": "application/json",
         },
         json={
-            "model": MODEL,
+            "model": model,
             "max_tokens": max_tokens,
             "system": system,
             "messages": [{"role": "user", "content": user}],
