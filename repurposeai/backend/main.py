@@ -1,6 +1,7 @@
 import json
 import threading
 import traceback
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -341,4 +342,5 @@ def explore_drug(q: str):
     return {"query": q, "papers": papers, "trials": trials, "safety": safety,
             "errors": [e for e in [pe, te, se] if e]}
 # Serve the frontend as static files at "/"
-app.mount("/", StaticFiles(directory="../frontend", html=True), name="frontend")
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
