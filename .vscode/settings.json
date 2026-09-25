@@ -1,0 +1,3 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/repurposeai/backend/.venv/Scripts/python.exe"
+}
