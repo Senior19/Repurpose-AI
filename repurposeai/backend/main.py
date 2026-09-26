@@ -345,6 +345,7 @@ def explore_drug(q: str):
 # Serve the frontend as static files at "/"
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 @app.get("/_stcore/health", include_in_schema=False)
+@app.get("/healthz", include_in_schema=False)
 def streamlit_health():
     return PlainTextResponse("ok")
 
