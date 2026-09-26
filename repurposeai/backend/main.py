@@ -5,6 +5,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -343,4 +344,8 @@ def explore_drug(q: str):
             "errors": [e for e in [pe, te, se] if e]}
 # Serve the frontend as static files at "/"
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+@app.get("/_stcore/health", include_in_schema=False)
+def streamlit_health():
+    return PlainTextResponse("ok")
+
 app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
