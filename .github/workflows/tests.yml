@@ -26,4 +26,4 @@ jobs:
         run: python -m compileall -q .
       - name: Run tests
         working-directory: repurposeai/backend
-        run: pytest -q
+        run: python -m pytest -q

@@ -1,6 +1,6 @@
 import json
 import os
-import traceback
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks
@@ -14,6 +14,8 @@ import agents
 import db
 import tools
 from schemas import ResearchRun, new_id
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="RepurposeAI")
 
@@ -90,7 +92,9 @@ def run_pipeline(run_id: str):
         run.status = "done"
         db.save_run(run)
 
-    except Exception as e:
+    except Exception:
+        # Keep full diagnostics server-side; persisted run data is API-visible.
+        logger.exception("Research pipeline failed for run_id=%s", run.id)
         run.status = "error"
         active_log = next(
             (entry for entry in reversed(run.logs) if entry.status == "running"),
@@ -98,9 +102,9 @@ def run_pipeline(run_id: str):
         )
         if active_log:
             active_log.status = "error"
-            active_log.result_summary = str(e).splitlines()[0]
+            active_log.result_summary = "Agent execution failed. Check server logs using the run ID."
             db.log_agent_step(active_log)
-        run.error = f"{e}\n{traceback.format_exc()}"
+        run.error = "Research pipeline failed. Check server logs using the run ID."
         db.save_run(run)
 
 

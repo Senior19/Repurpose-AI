@@ -398,7 +398,7 @@ From `repurposeai/backend`:
 
 ```bash
 pip install -r requirements-dev.txt
-pytest -q
+python -m pytest -q
 ```
 
 ### Important research limitation
@@ -412,7 +412,7 @@ From `repurposeai/backend`:
 
 ```bash
 pip install -r requirements-dev.txt
-pytest -q
+python -m pytest -q
 ```
 
 The GitHub Actions workflow runs Python compilation and the backend test suite on pushes and pull requests.

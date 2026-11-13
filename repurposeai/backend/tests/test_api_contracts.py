@@ -44,4 +44,4 @@ def test_pipeline_records_agent_failure_when_provider_key_is_missing(tmp_path, m
     assert failed_run.status == "error"
     assert failed_run.logs[0].agent == "orchestrator"
     assert failed_run.logs[0].status == "error"
-    assert failed_run.logs[0].result_summary == "GROQ_API_KEY is missing."
+    assert failed_run.logs[0].result_summary == "Agent execution failed. Check server logs using the run ID."

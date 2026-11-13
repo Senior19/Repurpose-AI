@@ -15,3 +15,14 @@ venv/
 *.db-journal
 *.db-shm
 *.db-wal
+
+# Local databases (do not commit research/user data)
+*.db
+*.sqlite
+*.sqlite3
+
+# Test and coverage artifacts
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
