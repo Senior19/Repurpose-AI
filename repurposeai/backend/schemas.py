@@ -46,6 +46,15 @@ class EvidenceItem:
     source: str                 # human readable source name
     url: Optional[str] = None
     confidence: str = "moderate"  # "low" | "moderate" | "high"
+    # Structured provenance: preserve identifiers so a reviewer can open and
+    # independently verify the original record.
+    source_id: Optional[str] = None
+    doi: Optional[str] = None
+    pmid: Optional[str] = None
+    nct_id: Optional[str] = None
+    published_at: Optional[str] = None
+    study_type: Optional[str] = None
+    retrieved_at: float = field(default_factory=time.time)
 
 
 @dataclass
