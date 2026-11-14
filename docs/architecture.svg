@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="690" viewBox="0 0 1200 690" role="img" aria-labelledby="title desc">
+<title id="title">RepurposeAI architecture</title>
+<desc id="desc">Researcher uses a web interface and FastAPI backend. A sequential orchestrator calls specialist agents, which retrieve evidence from Open Targets, ChEMBL, PubMed, ClinicalTrials.gov and openFDA. Results are stored in SQLite and returned for human review.</desc>
+<defs>
+  <style>
+    .h{font:700 22px Arial,sans-serif;fill:#172554}.t{font:15px Arial,sans-serif;fill:#334155}
+    .s{font:13px Arial,sans-serif;fill:#475569}.box{fill:#fff;stroke:#94a3b8;stroke-width:2}
+    .blue{fill:#eef2ff;stroke:#6366f1;stroke-width:2}.green{fill:#ecfdf5;stroke:#10b981;stroke-width:2}
+    .amber{fill:#fffbeb;stroke:#f59e0b;stroke-width:2}.line{stroke:#64748b;stroke-width:2.5;fill:none;marker-end:url(#arrow)}
+  </style>
+  <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0 L0 6 L9 3 z" fill="#64748b"/></marker>
+</defs>
+<rect width="1200" height="690" fill="#f8fafc"/>
+<text x="600" y="42" text-anchor="middle" class="h">RepurposeAI · System architecture</text>
+<rect x="430" y="72" width="340" height="70" rx="14" class="blue"/><text x="600" y="101" text-anchor="middle" class="h">Researcher / Web UI</text><text x="600" y="124" text-anchor="middle" class="s">Search · Hypothesis · Evidence review</text>
+<path d="M600 142 V184" class="line"/>
+<rect x="430" y="184" width="340" height="72" rx="14" class="blue"/><text x="600" y="214" text-anchor="middle" class="h">FastAPI application</text><text x="600" y="237" text-anchor="middle" class="s">Validation · API routes · Run lifecycle</text>
+<path d="M600 256 V298" class="line"/>
+<rect x="430" y="298" width="340" height="70" rx="14" class="amber"/><text x="600" y="326" text-anchor="middle" class="h">Research orchestrator</text><text x="600" y="349" text-anchor="middle" class="s">Sequential specialist-agent workflow</text>
+<path d="M600 368 V395 H180 V425 M600 395 V425 M600 395 H1020 V425" class="line"/>
+<rect x="55" y="425" width="250" height="92" rx="12" class="green"/><text x="180" y="457" text-anchor="middle" class="h">Biology + drug agents</text><text x="180" y="482" text-anchor="middle" class="s">Targets · mechanisms · candidates</text>
+<rect x="475" y="425" width="250" height="92" rx="12" class="green"/><text x="600" y="457" text-anchor="middle" class="h">Evidence agents</text><text x="600" y="482" text-anchor="middle" class="s">Literature · trials · safety</text>
+<rect x="895" y="425" width="250" height="92" rx="12" class="green"/><text x="1020" y="457" text-anchor="middle" class="h">Critic + synthesis</text><text x="1020" y="482" text-anchor="middle" class="s">Gaps · contradictions · brief</text>
+<path d="M180 517 V550 H600 M600 517 V550 M1020 517 V550 H600 V576" class="line"/>
+<rect x="430" y="576" width="340" height="70" rx="14" class="blue"/><text x="600" y="605" text-anchor="middle" class="h">SQLite persistence</text><text x="600" y="628" text-anchor="middle" class="s">Runs · agent logs · evidence metadata</text>
+<rect x="55" y="555" width="250" height="80" rx="12" class="box"/><text x="180" y="585" text-anchor="middle" class="h">Public data sources</text><text x="180" y="609" text-anchor="middle" class="s">Open Targets · ChEMBL · PubMed</text><text x="180" y="627" text-anchor="middle" class="s">ClinicalTrials.gov · openFDA</text>
+<path d="M305 595 H430" class="line"/>
+<text x="600" y="674" text-anchor="middle" class="s">Retrieved evidence is presented for human review; AI summaries are not clinical conclusions.</text>
+</svg>
