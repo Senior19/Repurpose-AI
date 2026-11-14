@@ -239,12 +239,27 @@ def drug_agent(run, targets):
             name = get_cached_drug_name(d["molecule_chembl_id"])
             key = name
             if key not in candidates:
-                candidates[key] = Candidate(
+                candidate = Candidate(
                     drug=name,
                     target=symbol,
                     pathway=None,
                     mechanism_hypothesis=d.get("mechanism_of_action") or "",
                 )
+                if d.get("mechanism_of_action") or d.get("action_type"):
+                    candidate.evidence.append(EvidenceItem(
+                        claim=(
+                            d.get("mechanism_of_action")
+                            or f"Recorded action type: {d.get('action_type')}"
+                        ),
+                        evidence_type="mechanistic",
+                        stance="neutral",
+                        source="ChEMBL mechanism record",
+                        url=d.get("url"),
+                        confidence="moderate",
+                        source_id=d.get("source_id"),
+                        study_type="curated mechanism database record",
+                    ))
+                candidates[key] = candidate
         _log(run, "drug_discovery", "query_chembl", "done", f"{symbol}: {len(drugs)} known drugs")
 
     result = list(candidates.values())[:4]  # cap for demo speed/cost
@@ -299,6 +314,11 @@ def literature_agent(run, candidate: Candidate):
             source=article["title"] if article else "PubMed article",
             url=article["url"] if article else None,
             confidence=item.get("confidence", "low"),
+            source_id=article.get("source_id") if article else None,
+            pmid=article.get("pmid") if article else item.get("pmid"),
+            doi=article.get("doi") if article else None,
+            published_at=article.get("pubdate") if article else None,
+            study_type=", ".join(article.get("publication_types") or []) if article else None,
         ))
 
 
@@ -326,6 +346,10 @@ def clinical_agent(run, candidate: Candidate):
                 source="ClinicalTrials.gov",
                 url=t["url"],
                 confidence="moderate",
+                source_id=t.get("source_id") or t.get("nct_id"),
+                nct_id=t.get("nct_id"),
+                published_at=t.get("start_date"),
+                study_type=t.get("study_type"),
             ))
 
 
@@ -341,6 +365,16 @@ def safety_agent(run, candidate: Candidate):
         return
     _log(run, "safety", "search_openfda", "done", f"{candidate.drug}: {len(notes)} safety notes found")
     candidate.safety_notes = notes
+    for note in notes:
+        candidate.evidence.append(EvidenceItem(
+            claim=note.get("note", "FDA label information retrieved."),
+            evidence_type="safety",
+            stance="neutral",
+            source=note.get("source", "openFDA drug labeling"),
+            url=note.get("source_url"),
+            confidence="moderate",
+            source_id=note.get("source_id"),
+        ))
 
 
 # ---------------------------------------------------------------------------

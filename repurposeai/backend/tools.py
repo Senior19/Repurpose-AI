@@ -15,6 +15,7 @@ import requests
 import html
 import re
 import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
 from html.parser import HTMLParser
 
 TIMEOUT = 15
@@ -249,10 +250,16 @@ def search_drugs_for_target(target_symbol: str, limit: int = 5):
     mechanisms = data2.get("mechanisms", [])
     drugs = []
     for m in mechanisms:
+        molecule_id = m.get("molecule_chembl_id")
         drugs.append({
-            "molecule_chembl_id": m.get("molecule_chembl_id"),
+            "molecule_chembl_id": molecule_id,
             "action_type": m.get("action_type"),
             "mechanism_of_action": m.get("mechanism_of_action"),
+            "target_chembl_id": chembl_target_id,
+            "source": "ChEMBL",
+            "source_id": molecule_id,
+            "retrieved_at": datetime.now(timezone.utc).timestamp(),
+            "url": f"https://www.ebi.ac.uk/chembl/explore/compound/{molecule_id}" if molecule_id else None,
         })
     return drugs, None
 
@@ -294,11 +301,22 @@ def search_pubmed(query: str, max_results: int = 5):
         item = result.get(pmid)
         if not item:
             continue
+        article_ids = item.get("articleids") or []
+        doi = next(
+            (entry.get("value") for entry in article_ids
+             if str(entry.get("idtype", "")).lower() == "doi"),
+            None,
+        )
         articles.append({
             "pmid": pmid,
+            "doi": doi,
             "title": item.get("title"),
             "journal": item.get("fulljournalname"),
             "pubdate": item.get("pubdate"),
+            "publication_types": item.get("pubtype") or [],
+            "source": "PubMed",
+            "source_id": f"PMID:{pmid}",
+            "retrieved_at": datetime.now(timezone.utc).timestamp(),
             "url": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
         })
     return articles, None
@@ -321,10 +339,17 @@ def search_clinical_trials(query: str, max_results: int = 5):
         proto = s.get("protocolSection", {})
         ident = proto.get("identificationModule", {})
         status_mod = proto.get("statusModule", {})
+        design = proto.get("designModule", {})
         trials.append({
             "nct_id": ident.get("nctId"),
             "title": ident.get("briefTitle"),
             "status": status_mod.get("overallStatus"),
+            "study_type": design.get("studyType"),
+            "start_date": (status_mod.get("startDateStruct") or {}).get("date"),
+            "completion_date": (status_mod.get("completionDateStruct") or {}).get("date"),
+            "source": "ClinicalTrials.gov",
+            "source_id": ident.get("nctId"),
+            "retrieved_at": datetime.now(timezone.utc).timestamp(),
             "url": f"https://clinicaltrials.gov/study/{ident.get('nctId')}" if ident.get("nctId") else None,
         })
     return trials, None
@@ -352,7 +377,17 @@ def search_drug_safety(drug_name: str, limit: int = 3):
         warnings = r.get("warnings") or r.get("boxed_warning") or r.get("adverse_reactions")
         if warnings:
             snippet = warnings[0][:400]
-            notes.append({"source": "FDA label", "note": snippet})
+            set_id = r.get("set_id") or r.get("id")
+            notes.append({
+                "source": "openFDA drug labeling",
+                "source_id": set_id,
+                "source_url": (
+                    f"https://api.fda.gov/drug/label.json?search=set_id:%22{set_id}%22"
+                    if set_id else "https://open.fda.gov/apis/drug/label/"
+                ),
+                "retrieved_at": datetime.now(timezone.utc).timestamp(),
+                "note": snippet,
+            })
     return notes, None
 
 
