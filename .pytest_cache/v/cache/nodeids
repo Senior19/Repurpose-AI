@@ -1,0 +1,9 @@
+[
+  "repurposeai/backend/tests/test_api_contracts.py::test_duplicate_explore_routes_are_not_registered",
+  "repurposeai/backend/tests/test_api_contracts.py::test_invalid_investigation_input_is_rejected",
+  "repurposeai/backend/tests/test_api_contracts.py::test_pipeline_records_agent_failure_when_provider_key_is_missing",
+  "repurposeai/backend/tests/test_api_contracts.py::test_review_decision_is_restricted",
+  "repurposeai/backend/tests/test_persistence.py::test_list_runs_reads_persisted_records",
+  "repurposeai/backend/tests/test_persistence.py::test_run_survives_cache_clear_and_database_reload",
+  "repurposeai/backend/tests/test_pipeline_errors.py::test_pipeline_error_is_safe_and_traceback_is_only_logged"
+]
