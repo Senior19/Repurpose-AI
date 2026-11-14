@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main, master]
 
-jjobs:
+jobs:
   test:
     runs-on: ubuntu-latest
     env:
@@ -32,5 +32,4 @@ jjobs:
 
       - name: Run tests
         working-directory: repurposeai/backend
-        run: python -m pytest -q
         run: python -m pytest -q
