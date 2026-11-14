@@ -12,9 +12,11 @@ jobs:
     env:
       PYTHONPATH: ${{ github.workspace }}/repurposeai/backend
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v5
-
+      - name: Run tests
+        working-directory: repurposeai/backend
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
