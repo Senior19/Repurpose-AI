@@ -6,24 +6,31 @@ on:
   pull_request:
     branches: [main, master]
 
-jobs:
+jjobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}/repurposeai/backend
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: repurposeai/backend/requirements*.txt
+
       - name: Install dependencies
         working-directory: repurposeai/backend
         run: pip install -r requirements-dev.txt
+
       - name: Compile Python files
         working-directory: repurposeai/backend
         run: python -m compileall -q .
+
       - name: Run tests
         working-directory: repurposeai/backend
+        run: python -m pytest -q
         run: python -m pytest -q
