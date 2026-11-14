@@ -32,4 +32,6 @@ jobs:
 
       - name: Run tests
         working-directory: repurposeai/backend
+        env:
+          PYTHONPATH: .
         run: python -m pytest -q
